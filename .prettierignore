@@ -1,0 +1,10 @@
+node_modules
+.next
+**/next-env.d.ts
+dist
+storage
+apps/web/public/sw.js*
+apps/web/public/workbox-*
+package-lock.json
+Bizrail_Africa_Implementation
+docs/implementation

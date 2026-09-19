@@ -1,0 +1,47 @@
+{
+  "name": "@bizrail/api",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "11.2.3",
+    "@nestjs/core": "11.2.3",
+    "@nestjs/platform-express": "11.2.3",
+    "@nestjs/config": "12.0.0",
+    "@nestjs/swagger": "11.4.7",
+    "@nestjs/throttler": "6.5.0",
+    "argon2": "0.45.1",
+    "bullmq": "6.3.4",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "csv-parse": "7.0.2",
+    "csv-stringify": "6.8.3",
+    "decimal.js": "10.6.0",
+    "kysely": "0.29.5",
+    "file-type": "22.1.0",
+    "helmet": "8.3.0",
+    "ioredis": "6.0.0",
+    "nestjs-pino": "5.1.0",
+    "nodemailer": "10.0.9",
+    "otplib": "13.5.0",
+    "pdfkit": "0.20.2",
+    "pg": "8.23.0",
+    "pino": "10.3.1",
+    "pino-http": "11.0.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "4.6.4"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/nodemailer": "8.0.1",
+    "@types/pdfkit": "0.17.6",
+    "@types/pg": "8.23.1"
+  },
+  "scripts": {
+    "dev": "npm run build && concurrently -k \"tsc --watch --preserveWatchOutput\" \"node --env-file-if-exists=../../.env --watch dist/main.js\"",
+    "build": "tsc -p tsconfig.json",
+    "start": "node --env-file-if-exists=../../.env dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "npm run build && node --env-file-if-exists=../../.env dist/ledger/migrate.js"
+  }
+}

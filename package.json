@@ -1,0 +1,45 @@
+{
+  "name": "bizrail-africa",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24.11.1 <25",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.6.2",
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"npm run dev -w @bizrail/api\" \"npm run dev -w @bizrail/web\"",
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:browser": "node scripts/browser-acceptance.mjs",
+    "local:configure": "node scripts/configure-local.mjs",
+    "runtime:check": "npm run build -w @bizrail/api && node --env-file-if-exists=.env scripts/check-runtime.mjs",
+    "db:start": "node --env-file-if-exists=.env scripts/local-postgres.mjs start",
+    "db:stop": "node --env-file-if-exists=.env scripts/local-postgres.mjs stop",
+    "db:status": "node --env-file-if-exists=.env scripts/local-postgres.mjs status",
+    "db:runtime": "node --env-file=.env scripts/configure-runtime.mjs",
+    "db:migrate": "npm run db:migrate -w @bizrail/api"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.13.4",
+    "@types/supertest": "7.2.1",
+    "concurrently": "10.0.5",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.5",
+    "fake-indexeddb": "6.2.5",
+    "prettier": "3.9.6",
+    "supertest": "7.2.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.0",
+    "vitest": "5.0.0"
+  }
+}
