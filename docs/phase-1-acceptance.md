@@ -1,4 +1,4 @@
-# Phase 1 local acceptance — 19 September 2026
+# Phase 1 local acceptance — 20 September 2026
 
 Execution scope: native Windows PostgreSQL, a local NestJS API and an installable Next.js PWA. Docker is not required. Redis is explicitly disabled locally. The user authorised development accounting rules on 19 September; these are not accountant-approved rules for live trade.
 
@@ -44,13 +44,13 @@ A PostgreSQL outbox worker copies pending notifications into an idempotent durab
 
 The user explicitly accepted these provisional rules for testing:
 
-| Transaction | Debit | Credit | Stock effect |
-| --- | --- | --- | --- |
-| Cash / credit sale | Cash / Receivables | Sales | Reduce units; move rounded weighted-average value from Inventory to Cost of sales |
-| Cash / credit purchase | Inventory | Cash / Payables | Add units and purchase value |
-| Cash / credit expense | Operating expenses | Cash / Payables | None |
-| Cash receipt | Cash | Receivables | None |
-| Quotation | None | None | None |
+| Transaction            | Debit              | Credit          | Stock effect                                                                      |
+| ---------------------- | ------------------ | --------------- | --------------------------------------------------------------------------------- |
+| Cash / credit sale     | Cash / Receivables | Sales           | Reduce units; move rounded weighted-average value from Inventory to Cost of sales |
+| Cash / credit purchase | Inventory          | Cash / Payables | Add units and purchase value                                                      |
+| Cash / credit expense  | Operating expenses | Cash / Payables | None                                                                              |
+| Cash receipt           | Cash               | Receivables     | None                                                                              |
+| Quotation              | None               | None            | None                                                                              |
 
 New test businesses start with 100 sample units costing K6 and priced at K10, balanced against opening equity. No tax is calculated. Cash receipts are recorded against the receivables control account; invoice allocation and party statements belong to later-phase workflows. Do not treat these sample balances or posting rules as approved merchant accounts.
 

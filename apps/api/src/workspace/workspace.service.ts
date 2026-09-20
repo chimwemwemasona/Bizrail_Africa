@@ -268,8 +268,13 @@ export class WorkspaceService {
       if (JSON.stringify(old) !== JSON.stringify(context))
         throw new ForbiddenException('Device ownership mismatch');
     } else deviceToken = randomBytes(32).toString('hex');
-    const leaseMinutes=z.coerce.number().int().min(1).max(1440).parse(process.env.OFFLINE_LEASE_MINUTES??1440);
-    const grant = await this.authority.enrol(context,leaseMinutes);
+    const leaseMinutes = z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(1440)
+      .parse(process.env.OFFLINE_LEASE_MINUTES ?? 1440);
+    const grant = await this.authority.enrol(context, leaseMinutes);
     if (!existing.rowCount)
       await this.pool.query(
         'INSERT INTO device_credentials VALUES($1,$2,$3,$4)',

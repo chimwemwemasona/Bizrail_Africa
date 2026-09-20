@@ -1,6 +1,6 @@
 # Native local runtime
 
-Updated 2026-09-15. Docker, containers and WSL are not project prerequisites. Node.js and native PostgreSQL are sufficient for the current local development scope. Redis delivery/cache is explicitly deferred locally.
+Updated 2026-09-20. Docker, containers and WSL are not project prerequisites. Node.js and native PostgreSQL are sufficient for local Phase 1. Redis delivery/cache is explicitly deferred locally.
 
 ```powershell
 # On a clean installation:
@@ -8,6 +8,7 @@ npm ci
 npm run local:configure
 npm run db:start
 npm run db:migrate
+npm run db:runtime
 npm run runtime:check
 npm run dev
 ```
@@ -21,7 +22,15 @@ npm run db:status
 npm run db:stop
 ```
 
-Stopping retains all data. Start it again after a laptop restart; this helper does not install a Windows service or automatic startup task. Data and PostgreSQL logs remain in ignored `storage/postgres`. Do not delete that directory to troubleshoot a startup failure. Check `PG_BIN`, port availability, `.env` credentials and `storage/postgres/postgres.log`. The local database user owns this development cluster; production runtime-role isolation remains pending.
+Stopping retains all data. Start it again after a laptop restart; this helper does not install a Windows service or automatic startup task. Data and PostgreSQL logs remain in ignored `storage/postgres`. Do not delete that directory to troubleshoot a startup failure. Check `PG_BIN`, port availability, `.env` credentials and `storage/postgres/postgres.log`.
+
+`db:runtime` creates a restricted `bizrail_runtime` role and privately writes `RUNTIME_DATABASE_URL` to `.env`. The API uses that URL; migrations retain the owner `DATABASE_URL`. The runtime role cannot create schema objects or update/delete/truncate journals. Run migrations before configuring the role, and rerun the role setup after adding tables that need application access. Restart the API after role setup because its generated password changes.
+
+## Built PWA
+
+For offline acceptance, run `npm run build`, then `npm run start -w @bizrail/api` and `npm run start -w @bizrail/web` in separate terminals. Open `http://127.0.0.1:3000`. Stop the running web server before rebuilding on Windows. Development hot reload is useful for editing, but offline acceptance targets the generated service worker and built application.
+
+Keep the local API's `.env` at `NODE_ENV=development` for development registration and the Redis bypass. The web build itself is a production build. `OFFLINE_LEASE_MINUTES` configures device grants from 1 to 1440 minutes, default 1440; existing event grants are never rewritten by renewal.
 
 ## Local Redis mode
 
@@ -35,7 +44,7 @@ REDIS_URL=
 
 Only this explicit development setting disables the Redis readiness requirement. Readiness reports `redis: disabled`; it never claims Redis is healthy. Production or unspecified `NODE_ENV` still requires Redis. To enable a separately provisioned native Redis service later, set `REDIS_ENABLED=true` and its `REDIS_URL`, then restart the API.
 
-Redis-dependent workers and cache are unavailable in this mode. Accepted journals and outbox entries remain durable in PostgreSQL. Redis delivery/replay qualification and the full Phase 1 infrastructure gate remain open; disabling Redis does not establish those guarantees.
+Redis-dependent workers and cache are unavailable in this mode. Accepted journals and outbox entries remain durable in PostgreSQL. A local worker atomically delivers outbox rows to an idempotent PostgreSQL delivery table. Redis delivery/replay qualification and the full Phase 1 infrastructure gate remain open; disabling Redis does not establish those guarantees.
 
 ## Runtime checks
 

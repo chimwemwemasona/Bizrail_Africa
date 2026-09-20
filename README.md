@@ -1,48 +1,88 @@
 # Bizrail Africa
 
-Development groundwork for the v2 offline-first SME operating system. The governing implementation plans are in [Bizrail_Africa_Implementation](Bizrail_Africa_Implementation/00_README.md). The referenced research document and SRS `.docx` are not present in this workspace; this setup follows the supplied v2 Markdown plans.
+An offline-first SME workspace built with Next.js, shadcn/ui, NestJS and PostgreSQL. The local Phase 1 application connects merchant capture, stock, a balanced ZMW ledger and device sync end to end.
 
-## Current scope and status
+## Current status — 20 September 2026
 
-**2026-09-13: Work locally on the laptop. Hetzner provisioning, deployment and production operations are deferred and do not block local groundwork.**
+- Password sign-in, development-business creation, authenticated device enrolment and time-limited offline grants.
+- Online/offline sales, quotations, cash receipts, purchases and expenses with immediate provisional balances and stock.
+- Installable PWA shell, persistent device-scoped records, reconnect sync and safe retries after lost responses.
+- Transaction activity, quotation versions, inventory, account balances and read-only journals.
+- Device revocation, preserved quarantine, independent review and idempotent release.
+- Recovery export, storage/lease warnings, safe logout and pending-work protection during updates.
+- Atomic ledger/source/stock/sync/outbox writes and durable PostgreSQL outbox delivery.
 
-Dependencies are installed and pinned with a lockfile. Phase 1 is in progress: ledger/posting/outbox, offline queue, internal server sync and runtime readiness foundations are implemented. Forty tests pass, including native PostgreSQL sync failure/retry checks. The dedicated native PostgreSQL database is running with Redis explicitly disabled for development. See [Phase 1 evidence](docs/phase-1-progress.md), [internal sync contract](docs/sync-contract.md) and [groundwork status](docs/groundwork-status.md). Authenticated enrolment, domain handlers, UI capture, Redis delivery/cache and full PWA/sync workflows remain pending.
+**Development accounting rules are enabled with the user's approval.** New test businesses receive 100 sample units costing K6 and priced at K10. No tax is calculated; cash receipts credit the receivables control account. Accountant approval, physical-device qualification and the previously deferred production infrastructure remain outside local acceptance. See [acceptance evidence and remaining gates](docs/phase-1-acceptance.md) and the [implementation plan](Bizrail_Africa_Implementation/00_README.md).
 
-## Local development (after installation is completed)
+## Run locally
 
-Node.js 24.11.1 and npm 11.6.2 are already available; `.nvmrc` and `package.json` record this baseline.
+Requirements: Node.js 24.11.1 or newer within Node 24, npm 11, and native PostgreSQL 18. Docker and WSL are not required. Redis is explicitly disabled for local development.
 
 ```powershell
-# On subsequent clean installations:
+git clone https://github.com/chimwemwemasona/Bizrail_Africa.git
+cd Bizrail_Africa
 npm ci
-# Generate local credentials without overwriting an existing .env:
 npm run local:configure
-# Uses the installed native PostgreSQL binaries:
 npm run db:start
-# Apply to the dedicated Bizrail database configured in .env:
 npm run db:migrate
+npm run db:runtime
 npm run runtime:check
+```
+
+The native helper defaults to `C:/Program Files/PostgreSQL/18/bin`; set `PG_BIN` for another installation. It uses a dedicated persistent database on `127.0.0.1:5433`, independently of an existing service on port 5432. `local:configure` preserves an existing `.env`. `db:runtime` generates the restricted application role and stores its connection string privately in `.env`; migrations use the separate owner connection.
+
+For development with automatic reload:
+
+```powershell
 npm run dev
 ```
 
-The frontend preview runs at http://127.0.0.1:3000 and uses shadcn/ui with Tailwind CSS. Desktop/mobile rendering and preview navigation are verified; financial workflows are not connected. See [UI conventions](docs/ui-conventions.md). API liveness is configured for http://127.0.0.1:3001/api/health/live. Readiness at `/api/health/ready` checks PostgreSQL migration state and any enabled Redis dependency separately from liveness. The API loads the root `.env`; the web app has no secrets or environment configuration yet. See [native local runtime setup](docs/local-runtime.md). Docker and WSL are not required; Redis is explicitly disabled for local development for now.
+For the complete PWA/offline workflow, build first, then run API and web in separate terminals:
+
+```powershell
+npm run build
+npm run start -w @bizrail/api
+```
+
+```powershell
+npm run start -w @bizrail/web
+```
+
+Open [the app](http://127.0.0.1:3000), choose **Create a local development workspace**, and choose your own credentials. There is no shared default password. Initial enrolment and catalogue download require an online connection. On Windows, stop the web server before rebuilding because it can hold the standalone output directory open.
+
+`npm run db:status` reports database status; `npm run db:stop` stops it while retaining data. Restart it after restarting the laptop. See [runtime configuration and recovery](docs/local-runtime.md).
+
+## Verification
 
 ```powershell
 npm run typecheck
 npm run lint
-npm test
-npm run build
 npm run format:check
+npm test -- --maxWorkers=1 --testTimeout=30000
+npm run build
+# With the built API/web app and database running:
+npm run test:browser
 ```
 
-`npm run db:stop` stops the project's native PostgreSQL cluster and retains its data. `npm run db:status` reports whether it is running. PostgreSQL binds to loopback port 5433; the existing Windows service on 5432 is independent.
+The automated suite contains 45 tests. PostgreSQL integration tests use an isolated temporary native cluster; a skipped suite is not database verification. Browser acceptance uses Chromium and synthetic businesses in the local application database. On a clean machine, install the browser with `npx playwright install chromium`.
 
-## Structure
+Browser checks exercise offline reload/reopening, ten sales and two expenses, lost-response retries without duplicate posting, revoked-device quarantine and independent review. Reports/screenshots are written to ignored `storage/acceptance/`. Chromium installability checks do not replace physical-device installation and flight-mode qualification.
 
-- `apps/api`: NestJS modular-monolith starting point; HTTP liveness only.
-- `apps/web`: Next.js App Router starting point.
-- `tests`: dependency compatibility smoke checks, not feature acceptance tests.
-- `docs/dependencies.md`: package decisions, scope and infrastructure prerequisites.
-- `scripts/local-postgres.mjs`: native PostgreSQL start/stop/status with persistent project storage.
+API [liveness](http://127.0.0.1:3001/api/health/live) is separate from [readiness](http://127.0.0.1:3001/api/health/ready). Readiness verifies migration checksums and configured dependencies; local Redis status is explicitly `disabled`.
 
-The ledger and offline queue are internal foundations; merchant workflows, authentication, approved accounting policies, complete offline guarantees and production deployment remain pending. Existing feature and qualification checkboxes remain open.
+## Configuration and data
+
+Use `.env.example` for configuration guidance; never commit real credentials. `.env`, database storage, browser evidence, dependencies and generated build/service-worker files are ignored by Git. Keep backups of local business data separately.
+
+`OFFLINE_LEASE_MINUTES` accepts 1–1440, defaulting to 1440. Renewal never changes grants on previously captured records or automatically approves quarantine. The public app shell is cached by the service worker; business records remain in scoped IndexedDB storage. Recovery exports exclude passwords and device credentials but contain private business data.
+
+The local API uses `NODE_ENV=development` even when serving the built PWA, so development registration and the explicit Redis bypass remain available. This is a local testing configuration, not a production deployment recipe.
+
+## Repository structure
+
+- `apps/web`: responsive merchant UI, IndexedDB queue, projections and PWA integration.
+- `apps/api`: authentication, device authority, sync, domain posting, ledger and migrations.
+- `tests`: unit, offline-storage, API/runtime and native PostgreSQL integration tests.
+- `scripts`: native runtime helpers, restricted database-role setup, PWA build and browser acceptance.
+- `docs`: [acceptance](docs/phase-1-acceptance.md), [progress](docs/phase-1-progress.md), [sync contract](docs/sync-contract.md) and [runtime](docs/local-runtime.md).
+- `Bizrail_Africa_Implementation`: the governing eight-phase plan. Referenced research/SRS documents are not present in this repository.

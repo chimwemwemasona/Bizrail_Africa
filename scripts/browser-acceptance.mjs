@@ -68,8 +68,10 @@ try {
   expect(manifest.display).toBe('standalone');
   expect(manifest.icons).toHaveLength(3);
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
-  const cdp=await ctx.newCDPSession(page);
-  expect((await cdp.send('Page.getInstallabilityErrors')).installabilityErrors).toEqual([]);
+  const cdp = await ctx.newCDPSession(page);
+  expect(
+    (await cdp.send('Page.getInstallabilityErrors')).installabilityErrors,
+  ).toEqual([]);
   await page.reload();
   await expect(
     page.getByRole('heading', { name: 'Your business, at a glance.' }),
