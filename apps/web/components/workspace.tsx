@@ -524,7 +524,7 @@ export function Workspace() {
           >
             {create
               ? 'Already have an account? Sign in'
-              : 'Create a local development workspace'}
+              : 'Create a demo workspace'}
           </Button>
           {profile && (
             <Button
@@ -557,7 +557,7 @@ export function Workspace() {
             Ready when you are.
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Local development workspace · ZMW · Lusaka time
+            Portfolio demo · Sample businesses · ZMW
           </p>
         </div>
         {error && (
@@ -667,6 +667,13 @@ export function Workspace() {
           </div>
         </header>
         <main className="mx-auto max-w-7xl space-y-6 p-5 sm:p-8 lg:p-10">
+          <div
+            role="note"
+            className="rounded-lg border bg-muted px-4 py-3 text-sm text-muted-foreground"
+          >
+            Public portfolio demo. Use sample records only; accounting rules are
+            for demonstration.
+          </div>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-primary">

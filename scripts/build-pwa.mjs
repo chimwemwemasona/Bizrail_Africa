@@ -23,7 +23,7 @@ const result = await generateSW({
 if (result.warnings.length) throw new Error(result.warnings.join('\n'));
 console.log(`Offline shell precached: ${result.count} assets.`);
 const standalone = web + '.next/standalone/apps/web/';
-await mkdir(standalone + '.next', { recursive: true });
+await mkdir(standalone + '.next/cache', { recursive: true });
 await cp(web + 'public', standalone + 'public', { recursive: true });
 await cp(web + '.next/static', standalone + '.next/static', {
   recursive: true,

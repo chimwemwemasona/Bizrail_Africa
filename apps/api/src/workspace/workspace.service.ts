@@ -42,7 +42,8 @@ export class WorkspaceService {
   private delivering = false;
   constructor(
     readonly pool: Pool,
-    private readonly localDevelopment = process.env.NODE_ENV === 'development',
+    private readonly localDevelopment = process.env.NODE_ENV ===
+      'development' || process.env.BIZRAIL_DEMO_MODE === 'true',
   ) {
     const handler = postingHandler(pool);
     this.sync = new SyncService(pool, {

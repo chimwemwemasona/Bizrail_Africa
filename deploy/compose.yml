@@ -1,0 +1,122 @@
+name: bizrail-africa
+services:
+  postgres:
+    image: postgres@sha256:afc7e2d441324c0388fa80c3d24f733b4194a4eb7f47dd8ee2b08eb1a24a647c
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bizrail
+      POSTGRES_USER: bizrail_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    mem_limit: 384m
+    cpus: 0.5
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U bizrail_owner -d bizrail]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  redis:
+    image: redis@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0
+    restart: unless-stopped
+    command:
+      [
+        redis-server,
+        --appendonly,
+        'yes',
+        --maxmemory,
+        64mb,
+        --maxmemory-policy,
+        noeviction,
+      ]
+    volumes:
+      - redis-data:/data
+    mem_limit: 128m
+    cpus: 0.25
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+  api:
+    image: node@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
+    restart: unless-stopped
+    user: '1000:1000'
+    working_dir: /app
+    command: [node, apps/api/dist/main.js]
+    environment:
+      NODE_ENV: production
+      BIZRAIL_DEMO_MODE: 'true'
+      DATABASE_URL: ${RUNTIME_DATABASE_URL:?required}
+      RUNTIME_DATABASE_URL: ${RUNTIME_DATABASE_URL:?required}
+      REDIS_URL: redis://redis:6379
+      HOST: 0.0.0.0
+      PORT: '3001'
+      DOCUMENT_STORAGE_PATH: /private
+      TZ: UTC
+    volumes:
+      - ../:/app:ro
+      - ${RUNTIME_ROOT:?required}/private:/private
+    read_only: true
+    tmpfs: [/tmp:size=64m]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 384m
+    cpus: 0.5
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3001/api/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+  web:
+    image: node@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
+    restart: unless-stopped
+    user: '1000:1000'
+    working_dir: /app
+    command: [node, apps/web/.next/standalone/apps/web/server.js]
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: '3000'
+      NEXT_TELEMETRY_DISABLED: '1'
+    volumes:
+      - ../:/app:ro
+      - ${RUNTIME_ROOT:?required}/web-cache:/app/apps/web/.next/standalone/apps/web/.next/cache
+    read_only: true
+    tmpfs: [/tmp:size=64m]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 384m
+    cpus: 0.5
+    depends_on:
+      api: { condition: service_healthy }
+  proxy:
+    image: nginx@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+    container_name: bizrail-africa-proxy
+    restart: unless-stopped
+    user: '101:101'
+    group_add: ['1000']
+    entrypoint: [nginx, -g, 'daemon off;']
+    ports: ['8444:8443']
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/chimwemwe/apps/chimwemwe-portfolio-tls:/certs:ro
+    read_only: true
+    tmpfs: [/tmp:size=32m]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.25
+    depends_on: [web]
+volumes:
+  postgres-data:
+  redis-data:

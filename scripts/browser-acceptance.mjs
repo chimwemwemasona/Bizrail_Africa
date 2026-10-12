@@ -4,7 +4,8 @@ import { chromium, expect } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import console from 'node:console';
-const base = 'http://127.0.0.1:3000';
+import process from 'node:process';
+const base = process.env.BIZRAIL_TEST_URL ?? 'http://127.0.0.1:3000';
 const output = new URL('../storage/acceptance/', import.meta.url);
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
@@ -23,7 +24,7 @@ async function login(p, user, pass, create = false) {
   if (create)
     await p
       .getByRole('button', {
-        name: 'Create a local development workspace',
+        name: 'Create a demo workspace',
         exact: true,
       })
       .click();

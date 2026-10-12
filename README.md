@@ -14,6 +14,10 @@ An offline-first SME workspace built with Next.js, shadcn/ui, NestJS and Postgre
 
 **Development accounting rules are enabled with the user's approval.** New test businesses receive 100 sample units costing K6 and priced at K10. No tax is calculated; cash receipts credit the receivables control account. Accountant approval, physical-device qualification and the previously deferred production infrastructure remain outside local acceptance. See [acceptance evidence and remaining gates](docs/phase-1-acceptance.md) and the [implementation plan](Bizrail_Africa_Implementation/00_README.md).
 
+## Hosted portfolio demo
+
+The Phase 1 sample-business demo is live at [https://95.217.214.201:8444/](https://95.217.214.201:8444/). Choose **Create a demo workspace** and your own credentials. Use sample records only. See [deployment and verification](docs/hosted-demo.md). This is a hosted demo, not a production accounting service.
+
 ## Run locally
 
 Requirements: Node.js 24.11.1 or newer within Node 24, npm 11, and native PostgreSQL 18. Docker and WSL are not required. Redis is explicitly disabled for local development.
